@@ -45,7 +45,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      
+
       - name: Set up Docker Buildx
         id: buildx
         uses: crazy-max/ghaction-docker-buildx@v1
@@ -53,11 +53,14 @@ jobs:
           version: latest
 
       - name: Log into registry
-        run: echo "${{ secrets.dockerhub_token }}" | docker login -u ${{ secrets.dockerhub_token }} --password-stdin
+        env:
+          username: ${{ secrets.dockerhub_username }}
+          password: ${{ secrets.dockerhub_token }}
+        run: echo "${password}" | docker login -u ${username} --password-stdin
 
       - name: Push image
         run: |
-          IMAGE_ID=${{ github.repository }}/$IMAGE_NAME
+          IMAGE_ID=cyrilix/$IMAGE_NAME
 
           # Strip git ref prefix from version
           VERSION=$(echo "${{ github.ref }}" | sed -e 's,.*/\(.*\),\1,')
@@ -71,5 +74,5 @@ jobs:
           echo IMAGE_ID=$IMAGE_ID
           echo VERSION=$VERSION
 
-          docker buildx build . --platform linux/arm/v7,linux/arm64,linux/X86_64 --progress plain --push $IMAGE_ID:$VERSION
-          
+          docker buildx build . --platform linux/arm/v7,linux/arm64,linux/X86_64 --progress plain --push --tag $IMAGE_ID:$VERSION
+
