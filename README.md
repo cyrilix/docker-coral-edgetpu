@@ -1,5 +1,7 @@
 # docker-coral-edgetpu
 
+![Docker](https://github.com/cyrilix/docker-coral-edgetpu/workflows/Docker/badge.svg?branch=master)
+
 Base image for [coral usb accelerator](https://coral.ai/products/accelerator/)
 
 ## Build images
