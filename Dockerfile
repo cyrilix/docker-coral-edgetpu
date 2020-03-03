@@ -12,3 +12,4 @@ RUN apt-get install -y libedgetpu1-std
 
 RUN pip3 install https://dl.google.com/coral/python/tflite_runtime-${TF_VERSION}.post1-cp${PYTHON_VERSION}-cp${PYTHON_VERSION}m-$(uname --kernel-name)_$(uname --machine).whl
 
+USER 1234
