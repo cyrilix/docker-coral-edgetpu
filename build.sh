@@ -1,6 +1,6 @@
 #! /bin/bash
 
-TENSORFLOW_VERSION=v2.9.1
+TENSORFLOW_VERSION=v2.10.0
 
 
 MANIFEST_TFLITE_BUILDER=tflite-builder:${TENSORFLOW_VERSION}
@@ -80,7 +80,9 @@ build_tensorflow_lite(){
 build_tflite_runtime(){
 
   local platform=$1
+  local lib_arch=$2
   local containerName=$CONTAINER_RUNTIME
+
 
 
 
@@ -131,25 +133,26 @@ build_tflite_runtime(){
                                   /usr/local/lib/absl/time \
                                   /usr/local/lib/absl/types
 
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/libtensorflow-lite.so /usr/local/lib/libtensorflowlite_c.so
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/libtensorflow-lite.so /usr/local/lib/libtensorflow-lite.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/fft2d-build/libfft2d_fftsg.so /usr/local/lib/libfft2d_fftsg.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/fft2d-build/libfft2d_fftsg2d.so /usr/local/lib/libfft2d_fftsg2d.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/xnnpack-build/libXNNPACK.so /usr/local/lib/libXNNPACK.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/cpuinfo-build/libcpuinfo.so /usr/local/lib/libcpuinfo.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/farmhash-build/libfarmhash.so /usr/local/lib/libfarmhash.so
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/base/*.so /usr/local/lib/absl/base
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/debugging/*.so /usr/local/lib/absl/debugging
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/container/*.so /usr/local/lib/absl/container
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/flags/*.so /usr/local/lib/absl/flags
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/hash/*.so /usr/local/lib/absl/hash
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/numeric/*.so /usr/local/lib/absl/numeric
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/profiling/*.so /usr/local/lib/absl/profiling
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/status/*.so /usr/local/lib/absl/status
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/strings/*.so /usr/local/lib/absl/strings
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/synchronization/*.so /usr/local/lib/absl/synchronization
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/time/*.so /usr/local/lib/absl/time
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/types/*.so /usr/local/lib/absl/types
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/base/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/debugging/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/container/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/flags/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/status/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/hash/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/numeric/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/profiling/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/strings/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/synchronization/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/time/*.so /usr/local/lib/
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/_deps/abseil-cpp-build/absl/types/*.so /usr/local/lib/
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/$BINARY_ARCH/pthreadpool/libpthreadpool.so /usr/local/lib/
+  buildah run $containerName cp -r /usr/local/lib/* /usr/local/lib/$lib_arch
 
   buildah commit --rm --manifest "${MANIFEST_TFLITE_RUNTIME}" "${containerName}"
 }
@@ -210,7 +213,8 @@ build_tflite_builder(){
                                   /usr/local/lib/x86_64-linux-gnu/absl/time \
                                   /usr/local/lib/x86_64-linux-gnu/absl/types
 
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/amd64/libtensorflow-lite.so /usr/local/lib/x86_64-linux-gnu/libtensorflowlite_c.so
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/amd64/libtensorflow-lite.so /usr/local/lib/x86_64-linux-gnu/libtensorflow-lite.so
+  buildah run $containerName ln -s /usr/local/lib/x86_64-linux-gnu/libtensorflow-lite.so /usr/local/lib/x86_64-linux-gnu/libtensorflowlite_c.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/amd64/_deps/fft2d-build/libfft2d_fftsg.so /usr/local/lib/x86_64-linux-gnu/libfft2d_fftsg.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/amd64/_deps/fft2d-build/libfft2d_fftsg2d.so /usr/local/lib/x86_64-linux-gnu/libfft2d_fftsg2d.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/amd64/_deps/xnnpack-build/libXNNPACK.so /usr/local/lib/x86_64-linux-gnu/libXNNPACK.so
@@ -248,7 +252,8 @@ build_tflite_builder(){
                                   /usr/local/lib/aarch64-linux-gnu/absl/time \
                                   /usr/local/lib/aarch64-linux-gnu/absl/types
 
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/arm64/libtensorflow-lite.so /usr/local/lib/aarch64-linux-gnu/libtensorflowlite_c.so
+  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/arm64/libtensorflow-lite.so /usr/local/lib/aarch64-linux-gnu/libtensorflow-lite.so
+  buildah run $containerName ln -s /usr/local/lib/aarch64-linux-gnu/libtensorflow-lite.so /usr/local/lib/aarch64-linux-gnu/libtensorflowlite_c.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/arm64/_deps/fft2d-build/libfft2d_fftsg.so /usr/local/lib/aarch64-linux-gnu/libfft2d_fftsg.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/arm64/_deps/fft2d-build/libfft2d_fftsg2d.so /usr/local/lib/aarch64-linux-gnu/libfft2d_fftsg2d.so
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/arm64/_deps/xnnpack-build/libXNNPACK.so /usr/local/lib/aarch64-linux-gnu/libXNNPACK.so
@@ -278,8 +283,8 @@ build_tflite_builder(){
 
 build_tensorflow_lite
 
-build_tflite_runtime "linux/amd64"
-build_tflite_runtime "linux/arm64"
+build_tflite_runtime "linux/amd64" "x86_64-linux-gnu"
+build_tflite_runtime "linux/arm64" "aarch64-linux-gnu"
 buildah manifest push --rm -f v2s2 --all "${MANIFEST_TFLITE_RUNTIME}" "docker://${OCI_REGISTRY}/${MANIFEST_TFLITE_RUNTIME}"
 
 build_tflite_builder
