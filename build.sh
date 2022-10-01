@@ -47,36 +47,6 @@ build_tensorflow_lite(){
                   ../../tensorflow/tensorflow/lite
   buildah run $containerName cmake --build . -j 14
 
-  printf "Build armhf\n"
-
-  buildah config --workingdir=/src/toolchains/ $containerName
-  buildah run $containerName curl -LO https://storage.googleapis.com/mirror.tensorflow.org/developer.arm.com/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz
-  buildah run $containerName tar xvf gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz -C /src/toolchains
-
-  buildah run $containerName mkdir -p /src/build/armhf
-
-  buildah config --workingdir=/src/build/armhf $containerName
-  CC_FLAGS="-march=armv7-a -mfpu=neon-vfpv4 -funsafe-math-optimizations"
-  ARMCC_PREFIX=/src/toolchains/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf/bin/arm-linux-gnueabihf-
-
-  buildah run $containerName cmake \
-                  -DBUILD_SHARED_LIBS=ON \
-                  -DTFLITE_ENABLE_RUY=ON \
-                  -DTFLITE_ENABLE_XNNPACK=ON \
-                  -DTFLITE_ENABLE_NNAPI=ON \
-                  -DTFLITE_ENABLE_GPU=ON \
-                  -DTFLITE_ENABLE_MMAP=ON \
-                  -DCMAKE_C_COMPILER=${ARMCC_PREFIX}gcc \
-                  -DCMAKE_CXX_COMPILER=${ARMCC_PREFIX}g++ \
-                  -DCMAKE_C_FLAGS="${CC_FLAGS}" \
-                  -DCMAKE_CXX_FLAGS="${CC_FLAGS}" \
-                  -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON \
-                  -DCMAKE_SYSTEM_NAME=Linux \
-                  -DCMAKE_SYSTEM_PROCESSOR=armv7 \
-                  ../../tensorflow/tensorflow/lite
-  buildah run $containerName cmake --build . -j 14
-
-
   printf "Build arm64\n"
 
   buildah config --workingdir=/src/toolchains/ $containerName
@@ -300,43 +270,6 @@ build_tflite_builder(){
 
   buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/arm64/pthreadpool/libpthreadpool.so /usr/local/lib/aarch64-linux-gnu/
 
-  printf "Copy armhf lib\n"
-  buildah run $containerName mkdir -p /usr/local/lib/arm-linux-gnueabihf
-  buildah run $containerName mkdir -p \
-                                  /usr/local/lib/arm-linux-gnueabihf \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/base \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/debugging \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/container \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/flags \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/hash \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/numeric \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/profiling \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/status \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/strings \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/synchronization \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/time \
-                                  /usr/local/lib/arm-linux-gnueabihf/absl/types
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/libtensorflow-lite.so /usr/local/lib/arm-linux-gnueabihf/libtensorflowlite_c.so
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/fft2d-build/libfft2d_fftsg.so /usr/local/lib/arm-linux-gnueabihf/libfft2d_fftsg.so
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/fft2d-build/libfft2d_fftsg2d.so /usr/local/lib/arm-linux-gnueabihf/libfft2d_fftsg2d.so
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/xnnpack-build/libXNNPACK.so /usr/local/lib/arm-linux-gnueabihf/libXNNPACK.so
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/cpuinfo-build/libcpuinfo.so /usr/local/lib/arm-linux-gnueabihf/libcpuinfo.so
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/farmhash-build/libfarmhash.so /usr/local/lib/arm-linux-gnueabihf/libfarmhash.so
-
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/base/*.so /usr/local/lib/arm-linux-gnueabihf/absl/base
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/debugging/*.so /usr/local/lib/arm-linux-gnueabihf/absl/debugging
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/container/*.so /usr/local/lib/arm-linux-gnueabihf/absl/container
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/flags/*.so /usr/local/lib/arm-linux-gnueabihf/absl/flags
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/hash/*.so /usr/local/lib/arm-linux-gnueabihf/absl/hash
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/numeric/*.so /usr/local/lib/arm-linux-gnueabihf/absl/numeric
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/profiling/*.so /usr/local/lib/arm-linux-gnueabihf/absl/profiling
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/status/*.so /usr/local/lib/arm-linux-gnueabihf/absl/status
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/strings/*.so /usr/local/lib/arm-linux-gnueabihf/absl/strings
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/synchronization/*.so /usr/local/lib/arm-linux-gnueabihf/absl/synchronization
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/time/*.so /usr/local/lib/arm-linux-gnueabihf/absl/time
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/_deps/abseil-cpp-build/absl/types/*.so /usr/local/lib/arm-linux-gnueabihf/absl/types
-
-  buildah copy --from=$CONTAINER_TFLITE $containerName /src/build/armhf/pthreadpool/libpthreadpool.so /usr/local/lib/arm-linux-gnueabihf/
 
   buildah commit --rm --manifest "${MANIFEST_TFLITE_BUILDER}" "${containerName}"
 
@@ -347,7 +280,6 @@ build_tensorflow_lite
 
 build_tflite_runtime "linux/amd64"
 build_tflite_runtime "linux/arm64"
-build_tflite_runtime "linux/arm/v7"
 buildah manifest push --rm -f v2s2 --all "${MANIFEST_TFLITE_RUNTIME}" "docker://${OCI_REGISTRY}/${MANIFEST_TFLITE_RUNTIME}"
 
 build_tflite_builder
